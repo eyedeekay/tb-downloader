@@ -10,10 +10,12 @@ import (
 )
 
 func getenv(v, d string) string {
-	m := os.Getenv("TOR_MIRROR")
+	m := os.Getenv(v)
 	if m == "" {
+		log.Println(d)
 		return d
 	}
+	log.Println(m)
 	return m
 }
 
@@ -49,10 +51,14 @@ var TOR_NO_UNPACK = getenvbool("TOR_NO_UNPACK", "false")
 var TOR_BROWSER_OS = getenv("TOR_BROWSER_OS", tbget.OS())
 var TOR_BROWSER_ARCH = getenv("TOR_BROWSER_ARCH", tbget.ARCH())
 
+func Log() {
+	log.Printf("%s, %v, %v, %s, %s", TOR_MIRROR, TOR_DOWNLOADER_VERBOSE, TOR_NO_UNPACK, TOR_BROWSER_OS, TOR_BROWSER_ARCH)
+}
+
 func DownloadVerifyUnpackTorBrowser(Directory string) (*exec.Cmd, error) {
 	lang := tbget.DefaultIETFLang
-	os := tbget.OS()
-	arch := tbget.ARCH()
+	os := TOR_BROWSER_OS
+	arch := TOR_BROWSER_ARCH
 	tbdownloader := tbget.NewTBDownloader(lang, os, arch, nil)
 	tbdownloader.DownloadPath = Directory
 	tbdownloader.Mirror = TOR_MIRROR
@@ -60,6 +66,7 @@ func DownloadVerifyUnpackTorBrowser(Directory string) (*exec.Cmd, error) {
 	tbdownloader.NoUnpack = TOR_NO_UNPACK
 	tbdownloader.Profile = &tbget.Content
 	tbdownloader.MakeTBDirectory()
+	Log()
 	tgz, sig, _, err := tbdownloader.DownloadUpdaterForLang(lang)
 	if err != nil {
 		return nil, err

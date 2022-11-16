@@ -17,16 +17,20 @@ func wd() string {
 }
 
 var (
-	launch    = flag.Bool("launch", false, "Launch Tor Browser after downloading")
-	directory = flag.String("directory", wd(), "Directory to download Tor Browser to")
+	launch                 = flag.Bool("launch", false, "Launch Tor Browser after downloading")
+	directory              = flag.String("directory", wd(), "Directory to download Tor Browser to")
+	TOR_MIRROR             = flag.String("mirror", "https://dist.torproject.org/torbrowser/", "Tor mirror to use")
+	TOR_DOWNLOADER_VERBOSE = flag.Bool("verbose", false, "Be verbose")
+	TOR_BROWSER_OS         = flag.String("os", tbget.OS(), "OS to get Tor Browser for")
+	TOR_BROWSER_ARCH       = flag.String("arch", tbget.ARCH(), "Tor Browser architecture to download")
 )
 
 func main() {
-	tbget.TOR_MIRROR = *flag.String("mirror", "https://dist.torproject.org/torbrowser/", "Tor mirror to use")
-	tbget.TOR_DOWNLOADER_VERBOSE = *flag.Bool("verbose", false, "Be verbose")
-	tbget.TOR_BROWSER_OS = *flag.String("os", tbget.OS(), "OS to get Tor Browser for")
-	tbget.TOR_BROWSER_ARCH = *flag.String("arch", tbget.ARCH(), "Tor Browser architecture to download")
 	flag.Parse()
+	tbget.TOR_MIRROR = *TOR_MIRROR
+	tbget.TOR_DOWNLOADER_VERBOSE = *TOR_DOWNLOADER_VERBOSE
+	tbget.TOR_BROWSER_OS = *TOR_BROWSER_OS
+	tbget.TOR_BROWSER_ARCH = *TOR_BROWSER_ARCH
 	cmd, err := tbget.DownloadVerifyUnpackTorBrowser(*directory)
 	if err != nil {
 		log.Fatalln(err)
