@@ -21,8 +21,6 @@ type FFDownloader TBDownloader
 
 // NewFirefoxDownloader returns a new FFDownloader with the given language, using the FFDownloader's OS/ARCH pair
 func NewFirefoxDownloader(lang string, os, arch string, content *embed.FS) *FFDownloader {
-	OS = os
-	ARCH = arch
 	return &FFDownloader{
 		Lang:         lang,
 		DownloadPath: DOWNLOAD_FIREFOX_PATH(),

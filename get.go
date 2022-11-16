@@ -35,6 +35,11 @@ import (
 	"golang.org/x/net/proxy"
 )
 
+//go:embed tor-browser/TPO-signing-key.pub
+//go:embed tor-browser/NOT-TPO-signing-key.pub
+//go:embed LICENSE
+var content embed.FS
+
 // WORKING_DIR is the working directory for the application.
 var WORKING_DIR = ""
 
@@ -108,16 +113,8 @@ type TBDownloader struct {
 	listener     net.Listener
 }
 
-// OS is the operating system of the TBDownloader.
-var OS = "linux"
-
-// ARCH is the architecture of the TBDownloader.
-var ARCH = "64"
-
 // NewTBDownloader returns a new TBDownloader with the given language, using the TBDownloader's OS/ARCH pair
 func NewTBDownloader(lang string, os, arch string, content *embed.FS) *TBDownloader {
-	OS = os
-	ARCH = arch
 	return &TBDownloader{
 		Lang:         lang,
 		DownloadPath: DOWNLOAD_PATH(),
@@ -968,4 +965,33 @@ func MirrorIsI2P(mirror string) bool {
 	log.Println("Checking if", url.Hostname(), "is an I2P hostname")
 
 	return strings.Contains(url.Hostname(), ".i2p")
+}
+
+func OS() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "osx"
+	case "linux":
+		return "linux"
+	case "windows":
+		return "win"
+	default:
+		return "unknown"
+	}
+}
+
+func ARCH() string {
+	switch runtime.GOARCH {
+	case "386":
+		return "32"
+	case "amd64":
+		return "64"
+	case "arm64":
+		if OS() == "osx" {
+			return "64"
+		}
+		return ""
+	default:
+		return "unknown"
+	}
 }
