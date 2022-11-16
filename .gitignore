@@ -2,3 +2,4 @@ unpack
 data-dir*
 tor-browser-*.*
 tbget/tbget
+downloads.json
