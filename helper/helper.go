@@ -46,6 +46,8 @@ func getenvbool(v, d string) bool {
 var TOR_MIRROR = getenv("TOR_MIRROR", "https://dist.torproject.org/torbrowser/")
 var TOR_DOWNLOADER_VERBOSE = getenvbool("TOR_DOWNLOADER_VERBOSE", "false")
 var TOR_NO_UNPACK = getenvbool("TOR_NO_UNPACK", "false")
+var TOR_BROWSER_OS = getenv("TOR_BROWSER_OS", tbget.OS())
+var TOR_BROWSER_ARCH = getenv("TOR_BROWSER_ARCH", tbget.ARCH())
 
 func DownloadVerifyUnpackTorBrowser(Directory string) (*exec.Cmd, error) {
 	lang := tbget.DefaultIETFLang
@@ -77,4 +79,12 @@ func DownloadVerifyUnpackTorBrowser(Directory string) (*exec.Cmd, error) {
 		return cmd, err
 	}
 	return nil, err
+}
+
+func OS() string {
+	return tbget.OS()
+}
+
+func ARCH() string {
+	return tbget.ARCH()
 }

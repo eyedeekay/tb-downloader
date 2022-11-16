@@ -22,6 +22,11 @@ var (
 )
 
 func main() {
+	tbget.TOR_MIRROR = *flag.String("mirror", "https://dist.torproject.org/torbrowser/", "Tor mirror to use")
+	tbget.TOR_DOWNLOADER_VERBOSE = *flag.Bool("verbose", false, "Be verbose")
+	tbget.TOR_BROWSER_OS = *flag.String("os", tbget.OS(), "OS to get Tor Browser for")
+	tbget.TOR_BROWSER_ARCH = *flag.String("arch", tbget.ARCH(), "Tor Browser architecture to download")
+	flag.Parse()
 	cmd, err := tbget.DownloadVerifyUnpackTorBrowser(*directory)
 	if err != nil {
 		log.Fatalln(err)
