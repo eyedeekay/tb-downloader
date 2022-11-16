@@ -7,8 +7,10 @@ import (
 )
 
 func main() {
-	_, err := tbget.DownloadVerifyUnpackTorBrowser(".")
+	cmd, err := tbget.DownloadVerifyUnpackTorBrowser(".")
 	if err != nil {
 		log.Fatalln(err)
 	}
+	out, err := cmd.CombinedOutput()
+	log.Println(out)
 }

@@ -29,7 +29,6 @@ import (
 	"github.com/itchio/damage/hdiutil"
 	"github.com/itchio/headway/state"
 	"github.com/magisterquis/connectproxy"
-	cp "github.com/otiai10/copy"
 	"github.com/ulikunitz/xz"
 
 	"golang.org/x/net/proxy"
@@ -38,7 +37,7 @@ import (
 //go:embed tor-browser/TPO-signing-key.pub
 //go:embed tor-browser/NOT-TPO-signing-key.pub
 //go:embed LICENSE
-var content embed.FS
+var Content embed.FS
 
 // WORKING_DIR is the working directory for the application.
 var WORKING_DIR = ""
@@ -114,7 +113,7 @@ type TBDownloader struct {
 }
 
 // NewTBDownloader returns a new TBDownloader with the given language, using the TBDownloader's OS/ARCH pair
-func NewTBDownloader(lang string, os, arch string, content *embed.FS) *TBDownloader {
+func NewTBDownloader(lang string, os, arch string, Content *embed.FS) *TBDownloader {
 	return &TBDownloader{
 		Lang:         lang,
 		DownloadPath: DOWNLOAD_PATH(),
@@ -122,7 +121,7 @@ func NewTBDownloader(lang string, os, arch string, content *embed.FS) *TBDownloa
 		OS:           os,
 		ARCH:         arch,
 		Verbose:      false,
-		Profile:      content,
+		Profile:      Content,
 	}
 }
 
@@ -217,7 +216,7 @@ func (t *TBDownloader) GetUpdaterForLangFromJSON(body io.ReadCloser, ietf string
 // Log logs things if Verbose is true.
 func (t *TBDownloader) Log(function, message string) {
 	if t.Verbose {
-		log.Println(fmt.Sprintf("%s: %s", function, message))
+		log.Printf("%s: %s", function, message)
 	}
 }
 
@@ -244,28 +243,6 @@ func (t *TBDownloader) MakeTBDirectory() {
 			log.Fatal(err)
 		}
 		t.Log("MakeTBDirectory()", "Writing TPO signing key to disk complete")
-	}
-	empath = path.Join("tor-browser", "unpack", "awo@eyedeekay.github.io.xpi")
-	dpath := filepath.Join(t.DownloadPath, "awo@eyedeekay.github.io.xpi")
-	opath = filepath.Join(t.UnpackPath, "awo@eyedeekay.github.io.xpi")
-	if !FileExists(opath) {
-		t.Log("MakeTBDirectory()", "Initial TAWO XPI not found, using the one embedded in the executable")
-		bytes, err := t.Profile.ReadFile(empath)
-		if err != nil {
-			log.Fatal(err)
-		}
-		os.MkdirAll(filepath.Dir(dpath), 0755)
-		os.MkdirAll(filepath.Dir(opath), 0755)
-		t.Log("MakeTBDirectory()", "Writing AWO XPI to disk")
-		err = ioutil.WriteFile(opath, bytes, 0644)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = ioutil.WriteFile(dpath, bytes, 0644)
-		if err != nil {
-			log.Fatal(err)
-		}
-		t.Log("MakeTBDirectory()", "Writing AWO XPI disk complete")
 	}
 }
 
@@ -353,6 +330,20 @@ func (wc WriteCounter) PrintProgress() {
 
 func (t *TBDownloader) StartConf() *tor.StartConf {
 	return StartConf(t.TorPath())
+}
+
+func TBPath(directory string) string {
+	switch OS() {
+	case "linux":
+		return filepath.Join(directory, "Browser", "start-tor-browser")
+	case "osx":
+		//return filepath.Join(s.TBUnpackPath(), "Browser", "Tor Browser.app", "Contents", "MacOS", "start-tor-browser")
+		return filepath.Join(directory, "Tor Browser.app", "Contents", "MacOS", "firefox")
+	case "windows":
+		return filepath.Join(directory, "Browser", "firefox.exe")
+	default:
+		return filepath.Join(directory, "Browser", "firefox")
+	}
 }
 
 func StartConf(tp string) *tor.StartConf {
@@ -595,20 +586,20 @@ func (t *TBDownloader) BotherToDownload(dl, name string) bool {
 	}
 	// 86 MB
 	if !strings.Contains(name, ".asc") {
-		contentLength, err := t.FetchContentLength(dl, name)
+		ContentLength, err := t.FetchContentLength(dl, name)
 		if err != nil {
 			return true
 		}
 
 		l := 4
-		if len(strconv.Itoa(int(contentLength))) < 4 {
+		if len(strconv.Itoa(int(ContentLength))) < 4 {
 			return true
 		}
-		lenString := strconv.Itoa(int(contentLength))[:l]
+		lenString := strconv.Itoa(int(ContentLength))[:l]
 		lenSize := strconv.Itoa(int(stat.Size()))[:l]
 		fmt.Fprintf(os.Stderr, "comparing sizes: %v %v", lenString, lenSize)
 
-		if stat.Size() == contentLength {
+		if stat.Size() == ContentLength {
 			//if lenString != lenSize {
 			//	return true
 			//} else {
@@ -725,9 +716,9 @@ func (t *TBDownloader) BrowserDir() string {
 	return filepath.Join(t.UnpackPath, "tor-browser_"+t.Lang)
 }
 
-func (t *TBDownloader) I2PBrowserDir() string {
-	return filepath.Join(t.UnpackPath, "i2p-browser_"+t.Lang)
-}
+//func (t *TBDownloader) I2PBrowserDir() string {
+//	return filepath.Join(t.UnpackPath, "i2p-browser_"+t.Lang)
+//}
 
 // UnpackUpdater unpacks the updater to the given path.
 // it returns the path or an erorr if one is encountered.
@@ -748,9 +739,9 @@ func (t *TBDownloader) UnpackUpdater(binpath string) (string, error) {
 			if err != nil {
 				return "", fmt.Errorf("UnpackUpdater: windows exec fail %s", err)
 			}
-			if err := cp.Copy(t.BrowserDir(), t.I2PBrowserDir()); err != nil {
+			/*if err := cp.Copy(t.BrowserDir(), t.I2PBrowserDir()); err != nil {
 				return "", fmt.Errorf("UnpackUpdater: copy fail %s", err)
-			}
+			}*/
 		}
 		// copy BrowserDir() to I2PBrowserDir()
 
@@ -772,11 +763,11 @@ func (t *TBDownloader) UnpackUpdater(binpath string) (string, error) {
 				return "", fmt.Errorf("UnpackUpdater: osx open/mount fail %s", err)
 			}
 		}
-		if !FileExists(t.I2PBrowserDir()) {
+		/*if !FileExists(t.I2PBrowserDir()) {
 			if _, err := damage.Mount(host, binpath, t.I2PBrowserDir()); err != nil {
 				return "", fmt.Errorf("UnpackUpdater: osx open/mount fail %s", err)
 			}
-		}
+		}*/
 		//cmd.Stdout = os.Stdout
 		//cmd.Stderr = os.Stderr
 		//err := cmd.Run()
@@ -784,11 +775,11 @@ func (t *TBDownloader) UnpackUpdater(binpath string) (string, error) {
 		return t.BrowserDir(), nil
 	}
 	if FileExists(t.BrowserDir()) {
-		if !FileExists(t.I2PBrowserDir()) {
+		/*if !FileExists(t.I2PBrowserDir()) {
 			if err := cp.Copy(t.BrowserDir(), t.I2PBrowserDir()); err != nil {
 				return "", fmt.Errorf("UnpackUpdater: copy fail %s", err)
 			}
-		}
+		}*/
 		return t.BrowserDir(), nil
 	}
 	fmt.Fprintf(os.Stderr, "Unpacking %s %s\n", binpath, t.UnpackPath)
@@ -834,11 +825,11 @@ func (t *TBDownloader) UnpackUpdater(binpath string) (string, error) {
 			fmt.Fprintf(os.Stderr, "Unpacked %s\n", header.Name)
 		}
 	}
-	if !FileExists(t.I2PBrowserDir()) {
+	/*if !FileExists(t.I2PBrowserDir()) {
 		if err := cp.Copy(t.BrowserDir(), t.I2PBrowserDir()); err != nil {
 			return "", fmt.Errorf("UnpackUpdater: copy fail %s", err)
 		}
-	}
+	}*/
 	return t.BrowserDir(), nil
 }
 

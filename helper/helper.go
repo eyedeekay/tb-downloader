@@ -56,6 +56,7 @@ func DownloadVerifyUnpackTorBrowser(Directory string) (*exec.Cmd, error) {
 	tbdownloader.Mirror = TOR_MIRROR
 	tbdownloader.Verbose = TOR_DOWNLOADER_VERBOSE
 	tbdownloader.NoUnpack = TOR_NO_UNPACK
+	tbdownloader.Profile = &tbget.Content
 	tbdownloader.MakeTBDirectory()
 	tgz, sig, _, err := tbdownloader.DownloadUpdaterForLang(lang)
 	if err != nil {
@@ -70,7 +71,10 @@ func DownloadVerifyUnpackTorBrowser(Directory string) (*exec.Cmd, error) {
 			return nil, fmt.Errorf("unpacking updater: %v", err)
 		}
 		log.Printf("Signature check passed: %s %s", tgz, sig)
-		log.Printf("output is: %s", out)
+		bin := tbget.TBPath(out)
+		log.Printf("output is: %s", bin)
+		cmd := exec.Command(bin)
+		return cmd, err
 	}
 	return nil, err
 }
